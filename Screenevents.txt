@@ -1,0 +1,116 @@
+
+REPORT ZBILLINGPS_SCREENEVENTS line-count 9(1).
+TYPES: BEGIN OF ty_vbrk,
+         vbeln TYPE zvbrk_ps-vbeln,
+         fkdat TYPE zvbrk_ps-fkdat,
+         kunrg TYPE zvbrk_ps-kunrg,
+         netwr TYPE zvbrk_ps-netwr,
+       END OF ty_vbrk.
+TYPES: BEGIN OF ty_vbrp,
+         vbeln TYPE zvbrp_ps-vbeln,
+         posnr TYPE zvbrp_ps-posnr,
+         matnr TYPE zvbrp_ps-matnr,
+         fkimg TYPE zvbrp_ps-fkimg,
+         vrkme TYPE zvbrp_ps-vrkme,
+         netwr TYPE zvbrp_ps-netwr,
+       END OF ty_vbrp.
+
+TYPES: BEGIN OF ty_T006A,
+         msehi TYPE t006a-msehi,
+         mseht TYPE t006a-mseht,
+       END OF ty_t006a.
+
+TYPES : BEGIN OF ty_KNA1,
+          kunnr TYPE kna1-kunnr,
+          name1 TYPE kna1-name1,
+        END OF ty_kna1.
+
+DATA :it_vbrk TYPE TABLE OF ty_vbrk,
+      wa_vbrk LIKE LINE OF it_vbrk.
+DATA :it_vbrp TYPE TABLE OF ty_vbrp,
+      wa_vbrp LIKE LINE OF it_vbrp.
+DATA :it_KNA1 TYPE TABLE OF ty_kna1,
+      wa_KNA1 LIKE LINE OF it_KNA1.
+DATA :it_T006A TYPE TABLE OF ty_T006A,
+      wa_T006A LIKE LINE OF it_T006A.
+data : wa_total like line of it_vbrp.
+
+LOAD-OF-PROGRAM.
+
+DATA : v_vbeln TYPE zvbrk_ps-vbeln.
+SELECT-OPTIONS s_vbeln FOR v_vbeln.
+START-OF-SELECTION.
+
+
+IF s_vbeln IS NOT INITIAL.
+
+  SELECT vbeln fkdat kunrg netwr FROM zvbrk_ps INTO TABLE it_vbrk WHERE vbeln IN s_vbeln.
+ endif.
+
+ Loop at it_vbrk into wa_vbrk.
+
+ WRITE : /'DOC_NO',wa_vbrk-vbeln,
+*        / 'payer',st_vbrk-kunrg,
+               /'payer name',wa_KNA1-name1,
+               /'Date',wa_vbrk-fkdat,
+              /'net value',wa_vbrk-netwr LEFT-JUSTIFIED.
+
+
+
+*
+ HIDE wa_vbrk-vbeln.
+ skip.
+ clear wa_vbrk.
+ endloop.
+ clear wa_vbrk.
+
+
+AT LINE-SELECTION.
+
+  IF it_vbrk IS NOT INITIAL.
+    SELECT vbeln
+      posnr
+      matnr
+      fkimg
+      vrkme
+      netwr FROM zvbrp_ps INTO TABLE  it_vbrp FOR ALL ENTRIES IN it_vbrk WHERE vbeln EQ it_vbrk-vbeln.
+    SELECT kunnr name1 FROM kna1 INTO TABLE  it_kna1  FOR ALL ENTRIES IN it_vbrk WHERE kunnr EQ it_vbrk-kunrg.
+    IF it_vbrp IS NOT INITIAL.
+      SELECT msehi mseht FROM t006a INTO TABLE IT_t006a  FOR ALL ENTRIES IN it_vbrp WHERE spras EQ sy-langu AND msehi EQ it_vbrp-vrkme.
+    ENDIF.
+  ENDIF.
+
+
+SET PF-STATUS 'LIST'.
+  SORT it_vbrp BY vbeln.
+  DATA:vbeln_temp LIKE wa_vbrp-vbeln.
+
+  DATA :Vtotal like wa_vbrp-fkimg.
+  DATA :Vtotal1 like wa_vbrp-fkimg.
+  vtotal = 0.
+
+  LOOP AT it_vbrP INTO wa_vbrP.
+    READ TABLE it_vbrk INTO wa_vbrk WITH KEY vbeln = wa_vbrp-vbeln.
+    READ TABLE it_kna1 INTO wa_KNA1 WITH KEY kunnr = wa_vbrk-kunrg.
+    READ TABLE it_T006A INTO wa_T006A WITH KEY msehi = wa_vbrp-vrkme.
+
+      AT NEW vbeln.
+
+      WRITE : / 'Item',
+           20 'material',
+           30 'quantity',
+           40 'Abbrevation',
+           70 'Net value'.
+      ENDAT.
+
+    WRITE : / wa_vbrp-posnr,
+          20 wa_vbrp-matnr,
+          30 wa_vbrp-fkimg LEFT-JUSTIFIED,
+          40 wa_T006A-mseht LEFT-JUSTIFIED,
+          70 wa_vbrp-netwr LEFT-JUSTIFIED.
+
+ TOP-OF-PAGE.
+ write : / 'BILLING DETAILS'.
+
+ END-OF-PAGE.
+WRITE : / '******************This is electronic statement*********

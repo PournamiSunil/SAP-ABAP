@@ -1,0 +1,239 @@
+DATA :it_makt type table of makt.
+DATA : V_MATNR TYPE MAKT-MATNR.
+
+
+SELECT-OPTIONS :S_MATNR FOR V_MATNR.
+PERFORM getdata.
+PERFORM displaydata.
+*&---------------------------------------------------------------------*
+*& Form getdata
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM getdata .
+SELECT * FROM MAKT INTO TABLE IT_MAKT WHERE MATNR IN S_MATNR.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form displaydata
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM displaydata .
+CL_SALV_TABLE=>factory(
+*  EXPORTING
+*    list_display   = if_salv_c_bool_sap=>false " ALV Displayed in List Mode
+*    r_container    =                           " Abstract Container for GUI Controls
+*    container_name =
+  IMPORTING
+    r_salv_table   =    DATA(O_ALV)                       " Basis Class Simple ALV Tables
+  CHANGING
+    t_table        = IT_MAKT
+).
+*CATCH cx_salv_msg. " ALV: General Error Class with Message
+*
+DATA: lo_functions TYPE REF TO cl_salv_functions_list.
+
+*
+    lo_functions = o_alv->get_functions( ).
+    lo_functions->set_default( abap_true ).
+
+*    SET CUSTOM PF STATUS.
+    o_alv->set_screen_status(
+      pfstatus      =  'SALV_STANDARD'
+      report        =  'SALV_DEMO_TABLE_SELECTIONS'
+      set_functions = o_alv->c_functions_all ).
+*    SETTING UP LAYOUT
+    o_alv->set_screen_status(
+      pfstatus      =  'SALV_STANDARD'
+      report        =  'SALV_DEMO_TABLE_SELECTIONS'
+      set_functions = o_alv->c_functions_all ).
+*    ADD HEADER AND FOOTER
+    DATA: lo_header  TYPE REF TO cl_salv_form_layout_grid,
+          lo_h_label TYPE REF TO cl_salv_form_label,
+          lo_h_flow  TYPE REF TO cl_salv_form_layout_flow.
+*
+*   header object
+    CREATE OBJECT lo_header.
+*
+*   To create a Lable or Flow we have to specify the target
+*     row and column number where we need to set up the output
+*     text.
+*
+*   information in Bold
+    lo_h_label = lo_header->create_label( row = 1 column = 1 ).
+    lo_h_label->set_text( 'ALV HEADER' ).
+*
+*   information in tabular format
+    lo_h_flow = lo_header->create_flow( row = 2  column = 1 ).
+    lo_h_flow->create_text( text = 'This is text of flow' ).
+*
+    lo_h_flow = lo_header->create_flow( row = 3  column = 1 ).
+    lo_h_flow->create_text( text = 'Number of Records in the output' ).
+*
+    lo_h_flow = lo_header->create_flow( row = 3  column = 2 ).
+    lo_h_flow->create_text( text = 20 ).
+*
+*   set the top of list using the header for Online.
+    o_alv->set_top_of_list( lo_header ).
+*
+*   set the top of list using the header for Print.
+    o_alv->set_top_of_list_print( lo_header ).
+*
+                   "set_top_of_page
+*
+
+*
+    DATA: lo_footer  TYPE REF TO cl_salv_form_layout_grid,
+          lo_f_label TYPE REF TO cl_salv_form_label,
+          lo_f_flow  TYPE REF TO cl_salv_form_layout_flow.
+*
+*   footer object
+    CREATE OBJECT lo_footer.
+*
+*   information in bold
+    lo_f_label = lo_footer->create_label( row = 1 column = 1 ).
+    lo_f_label->set_text( 'Footer .. here it goes' ).
+*
+*   tabular information
+    lo_f_flow = lo_footer->create_flow( row = 2  column = 1 ).
+    lo_f_flow->create_text( text = 'This is text of flow in footer' ).
+*
+    lo_f_flow = lo_footer->create_flow( row = 3  column = 1 ).
+    lo_f_flow->create_text( text = 'Footer number' ).
+*
+    lo_f_flow = lo_footer->create_flow( row = 3  column = 2 ).
+    lo_f_flow->create_text( text = 1 ).
+*
+
+*   Online footer
+    o_alv->set_end_of_list( lo_footer ).
+*
+*   Footer in print
+    o_alv->set_end_of_list_print( lo_footer ).
+*  DISPLAY SETTINGS
+    DATA: lo_display TYPE REF TO cl_salv_display_settings.
+*
+*   get display object
+    lo_display = o_alv->get_display_settings( ).
+*
+*   set ZEBRA pattern
+    lo_display->set_striped_pattern( 'X' ).
+*
+*   Title to ALV
+    lo_display->set_list_header( 'ALV Test for Display Settings' ).
+
+*    CHANGING COULUMNS
+ DATA: lo_cols TYPE REF TO cl_salv_columns.
+    lo_cols = o_alv->get_columns( ).
+*
+*   set the Column optimization
+    lo_cols->set_optimize( 'X' ).
+*
+*...Process individual columns
+    DATA: lo_column TYPE REF TO cl_salv_column.
+*
+*   Change the properties of the Columns KUNNR
+    TRY.
+        lo_column = lo_cols->get_column( 'KUNNR' ).
+        lo_column->set_long_text( 'Sold-To Party' ).
+        lo_column->set_medium_text( 'Sold-To Party' ).
+        lo_column->set_short_text( 'Sold-To' ).
+        lo_column->set_output_length( 10 ).
+      CATCH cx_salv_not_found.                          "#EC NO_HANDLER
+    ENDTRY.
+
+* **** ADD AND HANDLE HOTSPOT*******
+     DATA: lo_cols_tab TYPE REF TO cl_salv_columns_table,
+          lo_col_tab  TYPE REF TO cl_salv_column_table.
+    DATA :co_report TYPE REF TO cl_salv_column_table.
+
+*
+*   get Columns object
+    lo_cols_tab = o_alv->get_columns( ).
+*
+*   Get VBELN column
+    TRY.
+        lo_col_tab ?= lo_cols_tab->get_column( 'MATNR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+*
+*   Set the HotSpot for MATNR Column
+    TRY.
+        CALL METHOD lo_col_tab->set_cell_type
+          EXPORTING
+            value = if_salv_c_cell_type=>hotspot.
+        .
+      CATCH cx_salv_data_error .
+    ENDTRY.
+**********************APPLY COLORS************************
+
+*   DATA: lo_cols_tab TYPE REF TO cl_salv_columns_table.
+*        DATA:  lo_col_tab  TYPE REF TO cl_salv_column_table.
+    DATA: ls_color TYPE lvc_s_colo.    " Colors strucutre
+*
+*   get Columns object
+    lo_cols_tab = o_alv->get_columns( ).
+*
+    INCLUDE <color>.
+*
+*   Get ERDAT column & set the yellow Color fot it
+    TRY.
+        lo_col_tab ?= lo_cols_tab->get_column( 'MAKTX' ).
+        ls_color-col = col_total.
+        lo_col_tab->set_color( ls_color ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+*
+*.......Color for Specific Cell & Rows.................
+*   Applying color on the 3rd Row and Column AUART
+*   Applying color on the Entire 5th Row
+**
+*    DATA: lt_s_color TYPE lvc_t_scol,
+*          ls_s_color TYPE lvc_s_scol,
+*          la_vbak    LIKE LINE OF ct_vbak,
+*          l_count    TYPE i.
+**
+*    LOOP AT ct_vbak INTO la_vbak.
+*      l_count = l_count + 1.
+*      CASE l_count.
+**       Apply RED color to the AUART Cell of the 3rd Row
+*        WHEN 3.
+*          ls_s_color-fname     = 'SPRAS'.
+*          ls_s_color-color-col = col_negative.
+*          ls_s_color-color-int = 0.
+*          ls_s_color-color-inv = 0.
+*          APPEND ls_s_color TO lt_s_color.
+*          CLEAR  ls_s_color.
+**
+**       Apply GREEN color to the entire row # 5
+**         For entire row, we don't pass the Fieldname
+*        WHEN 5.
+*          ls_s_color-color-col = col_positive.
+*          ls_s_color-color-int = 0.
+*          ls_s_color-color-inv = 0.
+*          APPEND ls_s_color TO lt_s_color.
+*          CLEAR  ls_s_color.
+*      ENDCASE.
+**     Modify that data back to the output table
+*      la_vbak-t_color = lt_s_color.
+*      MODIFY ct_vbak FROM la_vbak.
+*      CLEAR  la_vbak.
+*      CLEAR  lt_s_color.
+*    ENDLOOP.
+**
+*   We will set this COLOR table field name of the internal table to
+*   COLUMNS tab reference for the specific colors
+*    TRY.
+*        lo_cols_tab->set_color_column( 'T_COLOR' ).
+*      CATCH cx_salv_data_error.                         "#EC NO_HANDLER
+*    ENDTRY.
+
+
+o_ALV->display( ).
+ENDFORM.

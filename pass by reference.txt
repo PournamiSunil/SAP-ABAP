@@ -1,0 +1,32 @@
+DATA:v_matnr type matnr,
+     v_spras type spras,
+     v_maktx type maktx.
+v_matnr = '000000000000000011'.
+v_spras = 'E'.
+*v_matnr = '000000000000000012'.
+*v_spras = 'E'.
+
+
+*write v_maktx.
+*pass by reference
+
+*perform get_maktx using v_matnr v_spras changing v_maktx.
+
+*&---------------------------------------------------------------------*
+*& Form get_maktx
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> V_MATNR
+*&      --> V_SPRAS
+*&      <-- V_MAKTX
+*&---------------------------------------------------------------------*
+
+
+perform get_maktx using v_matnr v_spras changing v_maktx.
+
+FORM get_maktx using p_v_matnr type matnr
+                    value(p_v_spras) type spras
+                 changing VALUE(p_v_maktx) type maktx.
+  select single maktx from makt into p_v_maktx where matnr eq v_matnr and spras eq v_spras.
+ENDFORM.

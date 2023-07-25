@@ -1,0 +1,19 @@
+DATA: v_matnr type makt-matnr.
+
+DATA :BEGIN OF st_makt,
+      matnr type makt-matnr,
+     spras type makt-spras,
+     maktg type makt-maktg,
+     end of st_makt.
+
+v_matnr = '1000'.
+write : v_matnr.
+
+v_matnr = '2000'.
+write : v_matnr.
+
+st_makt-matnr = '3000'.
+Write : st_makt-matnr.
+
+st_makt-matnr = '4000'.
+write : st_makt-matnr.

@@ -1,0 +1,50 @@
+DATA : it_header TYPE ZDEMO_T_HEADER,
+      wa_header like line of it_header.
+DATA :it_lineitem type ZITEM_TT_PS,
+      wa_lineitem like line of it_lineitem.
+
+DATA v_vbeln TYPE vbrk-vbeln.
+SELECT-OPTIONS s_vbeln FOR v_vbeln.
+
+START-OF-SELECTION.
+PERFORM get_data.
+
+
+END-OF-SELECTION.
+PERFORM display.
+
+
+
+*&---------------------------------------------------------------------*
+*& Form get_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+  CALL FUNCTION 'ZPS_FUNCTION_MODULE'
+  EXPORTING
+    im_vbeln           = S_vbeln[]
+ IMPORTING
+   EIT_HEADER         = it_header
+   EIT_LINEITEM       = it_lineitem.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form display
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display .
+
+CALL FUNCTION 'ZPS_FM_OUTPUTDISPLAY'
+  EXPORTING
+    itm_header         = it_header
+    itm_lineitem       = it_lineitem.
+          .
+
+ENDFORM.

@@ -1,0 +1,67 @@
+DATA : it_header TYPE ZDEMO_T_HEADER,
+      wa_header like line of it_header.
+DATA :it_lineitem type ZITEM_TT_PS,
+      wa_lineitem like line of it_lineitem.
+
+DATA v_vbeln TYPE vbrk-vbeln.
+SELECT-OPTIONS s_vbeln FOR v_vbeln.
+
+*DATA lw_header LIKE LINE OF p_it_header.
+
+START-OF-SELECTION.
+PERFORM get_data.
+
+
+END-OF-SELECTION.
+PERFORM display.
+
+
+
+*&---------------------------------------------------------------------*
+*& Form get_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+PERFORM get_billing_data IN PROGRAM ZPS_SUBROUTINE_COMMON_EXT USING s_vbeln[] CHANGING it_header it_lineitem.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form display
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display .
+WRITE : / 'Doc No',
+            10'Payer',
+           35'Date',
+            50'Net Value'.
+LOOP AT it_header into wa_header.
+   WRITE : / wa_header-vbeln,
+           10 wa_header-name1,
+           35 wa_header-fkdat LEFT-JUSTIFIED,
+           50 wa_header-netwr LEFT-JUSTIFIED.
+
+  endloop.
+skip.
+
+       WRITE : / 'Item',
+             10'Material',
+             20'Quantity',
+             30'UoM',
+             40'Net Value'.
+
+  Loop at it_lineitem into wa_lineitem where vbeln EQ wa_header-vbeln.
+
+      WRITE : / wa_lineitem-posnr,
+             10 wa_lineitem-matnr,
+             20 wa_lineitem-fkimg LEFT-JUSTIFIED,
+             30 wa_lineitem-mseht,
+             40 wa_lineitem-netwr left-justified.
+      endloop.
+ENDFORM.

@@ -1,0 +1,43 @@
+DATA: IT_KNA1 TYPE  ZPS_KNA1tt,
+      WA_KNA1 LIKE LINE OF IT_KNA1.
+
+DATA v_kunnr TYPE kna1-kunnr.
+SELECT-OPTIONS s_kunnr FOR v_kunnr.
+PERFORM getdata.
+Perform displaydata.
+*&---------------------------------------------------------------------*
+*& Form getdata
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM getdata .
+CALL FUNCTION 'ZPS_FM_CUST_DATA'
+  EXPORTING
+    im_kunnr        = s_kunnr[]
+ IMPORTING
+   EX_ITKNA1       = it_kna1
+          .
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form displaydata
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM displaydata .
+  WRITE : / 'CUSTOMER NO',
+           15 'CUSTOMER NAME',
+           50 'REGION' LEFT-JUSTIFIED.
+
+Loop at IT_kna1 into wa_kna1.
+   WRITE : / wa_KNA1-KUNNR,
+           15 wa_KNA1-name1,
+           50 wa_KNA1-REGIO LEFT-JUSTIFIED.
+   ENDLOOP.
+ENDFORM.

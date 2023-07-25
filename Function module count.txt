@@ -1,0 +1,24 @@
+DATA : V_num type i.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+CALL FUNCTION 'ZPS_FM_COUNT'
+ IMPORTING
+   NEXT_NO       = v_num.
+
+ write :'The total number of function called in the prgram is', v_num.

@@ -1,0 +1,55 @@
+TYPES : BEGIN OF ty_kna1,
+          kunnr TYPE kna1-kunnr,
+          name1 TYPE kna1-name1,
+        END OF ty_kna1.
+
+TYPES : BEGIN OF ty_t006a,
+          msehi TYPE t006a-msehi,
+          mseht TYPE t006a-mseht,
+        END OF ty_t006a.
+TYPES : BEGIN OF ty_vbrk,
+          vbeln TYPE vbrk-vbeln,
+          fkdat TYPE vbrk-fkdat,
+          kunrg TYPE vbrk-kunrg,
+          netwr TYPE vbrk-netwr,
+        END OF ty_vbrk.
+
+
+TYPES : BEGIN OF ty_vbrp,
+          vbeln TYPE zitem-vbeln,
+          posnr TYPE vbrp-posnr,
+          matnr TYPE vbrp-matnr,
+          fkimg TYPE vbrp-fklmg,
+          vrkme TYPE vbrp-vrkme,
+          netwr TYPE vbrp-netwr,
+        END OF ty_vbrp.
+" Data Objects
+DATA : it_vbrk TYPE TABLE OF ZVBRK_PS,
+       wa_vbrk LIKE LINE OF it_vbrk.
+DATA : it_vbrp TYPE TABLE OF zVBRP_PS,
+       wa_vbrp LIKE LINE OF it_vbrp.
+
+DATA it_kna1 TYPE STANDARD TABLE OF ty_kna1.
+DATA it_t006a TYPE STANDARD TABLE OF ty_t006a.
+DATA : wa_kna1  LIKE LINE OF it_kna1,
+       wa_t006a LIKE LINE OF it_t006a,
+       p_vbeln  TYPE vbrk-vbeln.
+
+TYPES ty_it_kna1 TYPE STANDARD TABLE OF ty_kna1.
+TYPES ty_it_t006a TYPE STANDARD TABLE OF ty_t006a.
+TYPES ty_it_vbrk TYPE STANDARD TABLE OF ty_vbrk.
+TYPES ty_it_vbrp TYPE STANDARD TABLE OF ty_vbrp.
+
+types: tr_vbeln like RANGE OF vbrk-vbeln.
+
+FORM get_details USING s_vbeln TYPE tr_vbeln CHANGING p_it_vbrk TYPE ty_it_vbrk
+                                         p_it_vbrp TYPE ty_it_vbrp
+                                         p_it_kna1 TYPE ty_it_kna1
+                                        p_it_t006a TYPE ty_it_t006a.
+
+  SELECT vbeln fkdat kunrg netwr FROM ZVBRK_PS INTO TABLE p_it_vbrk WHERE vbeln in s_vbeln.
+  SELECT vbeln posnr matnr fkimg vrkme netwr FROM ZVBRP_PS INTO TABLE p_it_vbrp WHERE vbeln in s_vbeln.
+
+  SELECT kunnr name1 FROM kna1 INTO TABLE p_it_kna1 FOR ALL ENTRIES IN it_vbrk WHERE kunnr EQ it_vbrk-kunrg.
+  SELECT msehi mseht FROM t006a INTO TABLE p_it_t006a FOR ALL ENTRIES IN it_vbrp WHERE msehi EQ it_vbrp-vrkme.
+ENDFORM.

@@ -1,0 +1,33 @@
+TYPES: BEGIN OF ty_makt,
+       matnr type makt,
+       spras type makt,
+       maktx type makt,
+  end of ty_makt.
+ DATA : it_makt type table of ty_makt,
+        wa_makt like line of it_makt.
+
+ wa_makt-matnr = '100'.
+ wa_makt-spras = 'E'.
+ wa_makt-maktx = 'Pen'.
+ APPEND wa_makt to it_makt.
+
+ wa_makt-matnr = '200'.
+ wa_makt-spras = 'E'.
+ wa_makt-maktx = 'Pencil'.
+ Append wa_makt to it_makt.
+
+ wa_makt-matnr = '200'.
+ wa_makt-spras = 'A'.
+ wa_makt-maktx = 'Pencil'.
+ Append wa_makt to it_makt.
+
+ wa_makt-matnr = '300'.
+ wa_makt-spras = 'E'.
+ wa_makt-maktx = 'Book'.
+ Append wa_makt to it_makt.
+
+ Loop at it_makt INTO wa_makt.
+ write: / wa_makt-matnr,
+ 20 wa_makt-spras,
+ 30 wa_makt-maktx.
+ endloop.

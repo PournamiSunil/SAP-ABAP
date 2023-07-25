@@ -1,0 +1,112 @@
+TYPES : BEGIN OF ty_kna1,
+         kunnr TYPE kna1-kunnr,
+         name1 TYPE kna1-name1,
+       END OF ty_kna1.
+
+TYPES : BEGIN OF ty_t006a,
+          msehi TYPE t006a-msehi,
+         mseht TYPE t006a-mseht,
+       END OF ty_t006a.
+" Data Objects
+DATA : it_vbrk TYPE TABLE OF ZVBRK_PS,
+       wa_vbrk LIKE LINE OF it_vbrk.
+DATA : it_vbrp TYPE TABLE OF ZVBRP_PS,
+       wa_vbrp LIKE LINE OF it_vbrp.
+DATA : it_header TYPE ZDEMO_T_HEADER,
+      wa_header like line of it_header.
+DATA :it_lineitem type ZITEM_TT_PS,
+      wa_lineitem like line of it_lineitem.
+DATA it_kna1 TYPE STANDARD TABLE OF ty_kna1.
+DATA it_t006a TYPE STANDARD TABLE OF ty_t006a.
+DATA : wa_kna1 LIKE LINE OF it_kna1,
+      wa_t006a LIKE LINE OF it_t006a.
+
+
+" Provide selection screen for user Input
+SELECT-OPTIONS s_vbeln FOR wa_vbrk-vbeln.
+START-OF-SELECTION.
+" Data Selection
+PERFORM get_header IN PROGRAM ZPS_EXT_SELECTION_PL USING s_vbeln[]
+                                                CHANGING it_header.
+PERFORM get_lineitem IN PROGRAM ZPS_EXT_SELECTION_PL USING s_vbeln[]
+                                                CHANGING it_lineitem.
+ WRITE : / 'Doc No',
+            10'Payer',
+           35'Date',
+            50'Net Value'.
+LOOP AT it_header into wa_header.
+   WRITE : / wa_header-vbeln,
+           10 wa_header-name1,
+           35 wa_header-fkdat LEFT-JUSTIFIED,
+           50 wa_header-netwr LEFT-JUSTIFIED.
+   HIDE wa_header-vbeln.
+      SKIP.
+      clear wa_header.
+  endloop.
+
+    AT LINE-SELECTION.
+       WRITE : / 'Item',
+             10'Material',
+             20'Quantity',
+             30'UoM',
+             40'Net Value'.
+
+  Loop at it_lineitem into wa_lineitem where vbeln EQ wa_header-vbeln.
+
+      WRITE : / wa_lineitem-posnr,
+             10 wa_lineitem-matnr,
+             20 wa_lineitem-fkimg LEFT-JUSTIFIED,
+             30 wa_lineitem-mseht,
+             40 wa_lineitem-netwr left-justified.
+      endloop.
+TYPES tr_vbeln TYPE RANGE OF vbrk-vbeln.
+
+FORM get_header USING r_vbeln TYPE tr_vbeln CHANGING p_it_header TYPE ZDEMO_T_HEADER.
+  TYPES : BEGIN OF ty_kna1,
+         kunnr TYPE kna1-kunnr,
+         name1 TYPE kna1-name1,
+       END OF ty_kna1.
+DATA : lt_vbrk TYPE TABLE OF ZVBRK_pS,
+       lw_vbrk LIKE LINE OF lt_vbrk.
+
+DATA : lt_kna1 TYPE STANDARD TABLE OF ty_kna1,
+       lw_kna1 LIKE LINE OF lt_kna1.
+
+DATA lw_header LIKE LINE OF p_it_header.
+
+SELECT * FROM Zvbrk_ps INTO TABLE lt_vbrk WHERE vbeln IN r_vbeln.
+  IF sy-subrc IS INITIAL.
+     SELECT kunnr name1 from kna1 INTO TABLE lt_kna1 FOR ALL ENTRIES IN lt_vbrk WHERE kunnr EQ lt_vbrk-kunrg.
+  ENDIF.
+
+  LOOP AT lt_vbrk INTO lw_vbrk.
+    READ TABLE lt_kna1 INTO lw_kna1 WITH KEY kunnr = lw_vbrk-kunrg.
+    MOVE-CORRESPONDING lw_vbrk TO lw_header.
+    MOVE-CORRESPONDING lw_kna1 TO lw_header.
+    APPEND lw_header TO p_it_header.
+    CLEAR lw_header.
+  ENDLOOP.
+ENDFORM.
+FORM get_lineitem USING r_vbeln TYPE tr_vbeln CHANGING p_it_lineitem type ZITEM_TT_PS.
+  TYPES : BEGIN OF ty_t006a,
+          msehi TYPE t006a-msehi,
+         mseht TYPE t006a-mseht,
+       END OF ty_t006a.
+ DATA : it_vbrp TYPE TABLE OF zVBRP_PS,
+        wa_vbrp LIKE LINE OF it_vbrp.
+ DATA it_t006a TYPE STANDARD TABLE OF ty_t006a.
+      DATA: wa_t006a LIKE LINE OF it_t006a.
+
+DATA lw_lineitem LIKE LINE OF p_it_LINEITEM.
+ SELECT * FROM ZVBRP_PS INTO TABLE it_vbrp where vbeln in r_vbeln.
+   if sy-subrc is initial.
+     SELECT msehi mseht FROM t006a INTO TABLE it_t006a FOR ALL ENTRIES IN it_vbrp WHERE msehi EQ it_vbrp-vrkme.
+       endif.
+       LOOP AT IT_VBRP INTO wa_vbrP.
+           READ TABLE it_t006a INTO wa_t006a WITH KEY msehi = wa_vbrp-vrkme.
+           MOVE-CORRESPONDING wa_vbrP to lw_lineitem.
+           MOVE-CORRESPONDING wa_T006A to lw_lineitem.
+           APPEND lw_lineitem to p_it_lineitem.
+           clear lw_lineitem.
+           ENDLOOP.
+           ENDFORM.

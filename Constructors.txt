@@ -1,0 +1,48 @@
+CLASS CL_COUNTER DEFINITION.
+PUBLIC SECTION.
+METHODS nextnumber EXPORTING number Type i.
+Methods setcount importing im_count type i.
+methods getcount exporting ex_count type i.
+methods constructor importing im_count type i.
+PRIVATE SECTION.
+DATA COUNT TYPE I.
+ENDCLASS.
+CLASS CL_COUNTER IMPLEMENTATION.
+  Method nextnumber.
+  number = count + 1.
+  count = number.
+  ENDMETHOD.
+  method setcount.
+    if im_count GE 100.
+    count = im_count.
+    ENDIF.
+  endmethod.
+  METHOD getcount.
+    ex_count = count.
+    endmethod.
+    METHOD Constructor.
+      count = im_count.
+      ENDMETHOD.
+  ENDCLASS.
+  START-OF-SELECTION.
+  DATA obj_doc TYPE REF TO CL_COUNTER.
+  DATA obj_tag TYPE REF To CL_COUNTER.
+  DATA V_DOC TYPE I.
+  DATA V_TAG TYPE I.
+
+  CREATE OBJECT :obj_doc
+    EXPORTING
+      im_count = 200.
+    .
+  CREATE OBJECT: obj_tag
+    EXPORTING
+      im_count = 150
+
+  obj_doc->nextnumber(
+    IMPORTING
+      number = v_doc
+  ).
+  obj_tag->nextnumber(
+    IMPORTING
+      number = v_tag
+  ).

@@ -1,0 +1,61 @@
+PARAMETERS : doc_no type vbrk-vbeln.
+Types: begin of ty_vbrk,
+       vbeln type ZVBRK_PS-vbeln,
+       fkdat type ZVBRK_PS-fkdat,
+       kunrg type ZVBRK_PS-kunrg,
+       netwr type ZVBRK_PS-netwr,
+  end of ty_vbrk.
+  Types: begin of ty_vbrp,
+       vbeln type ZVBRP_PS-vbeln,
+       posnr type ZVBRP_PS-posnr,
+       matnr type ZVBRP_PS-matnr,
+       fkimg type ZVBRP_PS-fkimg,
+       vrkme type ZVBRP_PS-vrkme,
+       netwr type ZVBRP_PS-netwr,
+ end of ty_vbrp.
+
+ DATA :it_vbrk type table of ty_vbrk,
+       wa_vbrk like line of it_vbrk.
+ DATA :it_vbrp type table of ty_vbrp,
+       wa_vbrp like line of it_vbrp.
+
+ data : v_name type kna1-NAME1.
+ data :v_text type T006A-Mseht.
+Select vbeln fkdat kunrg netwr from zvbrk_ps into table it_vbrk where vbeln eq doc_no.
+Loop at it_vbrk into wa_vbrk.
+endloop.
+select name1 from kna1 into v_name where kunnr EQ wa_vbrk-kunrg.
+  endselect.
+  Write : /'DOC_NO',wa_vbrk-vbeln,
+        / 'payer',wa_vbrk-kunrg,
+         /'payer name',v_name,
+         /'Date',wa_vbrk-fkdat,
+        /'net value',wa_vbrk-netwr LEFT-JUSTIFIED.
+
+  Select vbeln
+       posnr
+       matnr
+       fkimg
+       vrkme from zvbrp_ps into table it_vbrp.
+
+     Write : / 'Item',
+      20 'material',
+      30 'quantity',
+      40 'UOM',
+      50 'Abbrevation',
+      80 'Net value'.
+    Loop at it_vbrp into wa_vbrp where vbeln eq doc_no.
+
+      Select mseht from T006A into v_text where
+    spras EQ sy-langu and msehi eq wa_vbrp-vrkme.
+        endselect.
+
+
+
+      Write : / wa_vbrp-vbeln,
+      20 wa_vbrp-matnr,
+      30 wa_vbrp-fkimg left-justified,
+      40 wa_vbrp-vrkme,
+      50 v_text left-justified,
+      80 wa_vbrp-netwr left-justified.
+     endloop.
